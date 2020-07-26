@@ -52,6 +52,8 @@ public:
    * @return string version
    */
   static std::string toString(const TDescriptor &a);
+  static void toArray(const TDescriptor &a, unsigned char * out);
+  static void fromArray(TDescriptor &a, const unsigned char * in);
 
   /**
    * Returns a descriptor from a string

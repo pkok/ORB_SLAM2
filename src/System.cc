@@ -62,7 +62,17 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
 
     mpVocabulary = new ORBVocabulary();
-    bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
+    bool bVocLoad;
+    // From slambench3's version of ORB_SLAM2
+    if(strVocFile.substr(strVocFile.length()-4, 4) == ".txt") 
+    {
+      bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
+    }
+    else
+    {
+      bVocLoad = mpVocabulary->loadFromBinFile(strVocFile);
+    }
+
     if(!bVocLoad)
     {
         cerr << "Wrong path to vocabulary. " << endl;

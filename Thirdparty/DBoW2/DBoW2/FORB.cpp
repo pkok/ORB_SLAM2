@@ -114,6 +114,31 @@ std::string FORB::toString(const FORB::TDescriptor &a)
   
   return ss.str();
 }
+  
+// --------------------------------------------------------------------------
+
+void FORB::toArray(const FORB::TDescriptor &a, unsigned char *out)
+{
+  const unsigned char *p = a.ptr<unsigned char>();
+  
+  for(int i = 0; i < a.cols; ++i, ++p)
+  {
+    out[i] = *p;
+  }
+}
+  
+// --------------------------------------------------------------------------
+
+void FORB::fromArray(FORB::TDescriptor &a, const unsigned char *in)
+{
+  a.create(1, FORB::L, CV_8U);
+  unsigned char *p = a.ptr<unsigned char>();
+  
+  for(int i = 0; i < FORB::L; ++i, ++p)
+  {
+    *p = in[i];
+  }
+}
 
 // --------------------------------------------------------------------------
   
