@@ -28,6 +28,8 @@ else()
    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-catch-value -Wno-int-in-bool-context -Wno-misleading-indentation")
+
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake_modules)
 
 find_package(OpenCV 3.0 QUIET)
@@ -60,13 +62,33 @@ ${PROJECT_SOURCE_DIR}/../../../lib/libORB_SLAM2.so
 )
 
 # Node for monocular camera
-rosbuild_add_executable(VIO
-src/ros_vio.cc
+rosbuild_add_executable(Mono
+src/ros_vio_mono.cc
 src/MsgSync/MsgSynchronizer.cpp
 )
 
-target_link_libraries(VIO
+target_link_libraries(Mono
 ${LIBS}
 )
+
+## Node for monocular camera
+#rosbuild_add_executable(Stereo
+#src/ros_vio_stereo.cc
+#src/MsgSync/MsgSynchronizer.cpp
+#)
+#
+#target_link_libraries(Stereo
+#${LIBS}
+#)
+
+## Node for monocular camera
+#rosbuild_add_executable(RGBD
+#src/ros_vio_rgbd.cc
+#src/MsgSync/MsgSynchronizer.cpp
+#)
+#
+#target_link_libraries(RGBD
+#${LIBS}
+#)
 
 

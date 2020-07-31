@@ -84,6 +84,8 @@ public:
     // Returns the camera pose (empty if tracking fails).
     cv::Mat TrackMonocular(const cv::Mat &im, const double &timestamp);
     cv::Mat TrackMonoVI(const cv::Mat &im, const std::vector<IMUData> &vimu, const double &timestamp);
+    cv::Mat TrackStereoVI(const cv::Mat &imLeft, const cv::Mat &imRight, const std::vector<IMUData> &vimu, const double &timestamp);
+    cv::Mat TrackRGBDVI(const cv::Mat &im, const cv::Mat &depthmap, const std::vector<IMUData> &vimu, const double &timestamp);
 
     // This stops local mapping thread (map building) and performs only camera tracking.
     void ActivateLocalizationMode();
