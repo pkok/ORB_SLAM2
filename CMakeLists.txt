@@ -28,7 +28,7 @@ endif()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
-find_package(OpenCV 2.4.3 REQUIRED)
+find_package(OpenCV 3.2.0 REQUIRED)
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(Cholmod REQUIRED)
@@ -36,7 +36,6 @@ find_package(Cholmod REQUIRED)
 include_directories(
 ${PROJECT_SOURCE_DIR}
 ${PROJECT_SOURCE_DIR}/include
-${PROJECT_SOURCE_DIR}/src
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
 ${CHOLMOD_INCLUDE_DIR}
@@ -65,24 +64,23 @@ src/Sim3Solver.cc
 src/Initializer.cc
 src/Viewer.cc
 
-include/Frame.h
-include/KeyFrame.h
-include/Tracking.h
-include/LocalMapping.h
+#include/Frame.h
+#include/KeyFrame.h
+#include/Tracking.h
+#include/LocalMapping.h
+#
+#include/IMU/configparam.h
+#include/IMU/imudata.h
+#include/IMU/IMUPreintegrator.h
+#include/IMU/so3.h
+#include/IMU/NavState.h
+#include/IMU/g2otypes.h
 
-src/IMU/configparam.h
 src/IMU/configparam.cpp
-
-src/IMU/imudata.h
 src/IMU/imudata.cpp
-src/IMU/IMUPreintegrator.h
 src/IMU/IMUPreintegrator.cpp
 src/IMU/so3.cpp
-src/IMU/so3.h
-src/IMU/NavState.h
 src/IMU/NavState.cpp
-
-src/IMU/g2otypes.h
 src/IMU/g2otypes.cpp
 )
 
