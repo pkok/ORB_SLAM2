@@ -81,6 +81,15 @@ target_link_libraries(Stereo
   ${LIBS}
 )
 
+## Test node
+rosbuild_add_executable(Test
+  src/test.cc
+)
+
+target_link_libraries(Test
+  ${LIBS}
+)
+
 ## Node for RGB-D camera
 #rosbuild_add_executable(RGBD
 #src/ros_vio_rgbd.cc

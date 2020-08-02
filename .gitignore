@@ -23,5 +23,6 @@ Examples/Stereo/stereo_kitti
 Examples/ROS/ORB_VIO/Mono
 Examples/ROS/ORB_VIO/Stereo
 Examples/ROS/ORB_VIO/RGBD
+Examples/ROS/ORB_VIO/Test
 
 tools/bin_vocabulary
