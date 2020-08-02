@@ -28,6 +28,8 @@ public:
 
     std::string _bagfile;
     std::string _imageTopic;
+    std::string _imageTopicLeft;
+    std::string _imageTopicRight;
     std::string _imuTopic;
 
     static std::string getTmpFilePath();
@@ -35,6 +37,11 @@ public:
 
     static double GetVINSInitTime(){return _nVINSInitTime;}
     static bool GetRealTimeFlag() {return _bRealTime;}
+
+    cv::Mat _map_1x;
+    cv::Mat _map_1y;
+    cv::Mat _map_2x;
+    cv::Mat _map_2y;
 
 private:
     static Eigen::Matrix4d _EigTbc;

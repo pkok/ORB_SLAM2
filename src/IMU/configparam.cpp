@@ -2,7 +2,7 @@
 
 namespace ORB_SLAM2
 {
-double ConfigParam::_g = 9.810;
+double ConfigParam::_g = 9.80665;
 
 Eigen::Matrix4d ConfigParam::_EigTbc = Eigen::Matrix4d::Identity();
 cv::Mat ConfigParam::_MatTbc = cv::Mat::eye(4,4,CV_32F);
@@ -35,6 +35,8 @@ ConfigParam::ConfigParam(std::string configfile)
     fSettings["imagetopic"] >> _imageTopic;
     std::cout<<"imu topic: "<<_imuTopic<<std::endl;
     std::cout<<"image topic: "<<_imageTopic<<std::endl;
+    fSettings["imagetopic_left"] >> _imageTopicLeft;
+    fSettings["imagetopic_right"] >> _imageTopicRight;
 
     _LocalWindowSize = fSettings["LocalMapping.LocalWindowSize"];
     std::cout<<"local window size: "<<_LocalWindowSize<<std::endl;
@@ -83,6 +85,37 @@ ConfigParam::ConfigParam(std::string configfile)
         _bRealTime = (tmpBool != 0);
         std::cout<<"whether run realtime? 0/1: "<<_bRealTime<<std::endl;
     }
+
+    {
+        cv::Mat K_l, K_r, P_l, P_r, R_l, R_r, D_l, D_r;
+        fSettings["LEFT.K"] >> K_l;
+        fSettings["RIGHT.K"] >> K_r;
+
+        fSettings["LEFT.P"] >> P_l;
+        fSettings["RIGHT.P"] >> P_r;
+
+        fSettings["LEFT.R"] >> R_l;
+        fSettings["RIGHT.R"] >> R_r;
+
+        fSettings["LEFT.D"] >> D_l;
+        fSettings["RIGHT.D"] >> D_r;
+
+        int rows_l = fSettings["LEFT.height"];
+        int cols_l = fSettings["LEFT.width"];
+        int rows_r = fSettings["RIGHT.height"];
+        int cols_r = fSettings["RIGHT.width"];
+        
+        if(K_l.empty() || K_r.empty() || P_l.empty() || P_r.empty() || R_l.empty() || R_r.empty() || D_l.empty() || D_r.empty() ||
+                rows_l==0 || rows_r==0 || cols_l==0 || cols_r==0)
+        {
+            std::cerr << "ERROR: Calibration parameters to rectify stereo are missing!" << std::endl;
+        }
+
+        cv::initUndistortRectifyMap(K_l,D_l,R_l,P_l.rowRange(0,3).colRange(0,3),cv::Size(cols_l,rows_l),CV_32F,_map_1x, _map_1y);
+        cv::initUndistortRectifyMap(K_r,D_r,R_r,P_r.rowRange(0,3).colRange(0,3),cv::Size(cols_r,rows_r),CV_32F,_map_2x, _map_2y);
+    }
+
+
 }
 
 std::string ConfigParam::getTmpFilePath()
