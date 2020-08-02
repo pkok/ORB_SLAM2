@@ -1,23 +1,23 @@
-#include "MsgSynchronizer.h"
+#include "MonoMsgSynchronizer.h"
 #include "../../../include/IMU/configparam.h"
 
 namespace ORBVIO
 {
 
-MsgSynchronizer::MsgSynchronizer(const double& imagedelay):
+MonoMsgSynchronizer::MonoMsgSynchronizer(const double& imagedelay):
     _imageMsgDelaySec(imagedelay), _status(NOTINIT),
     _dataUnsyncCnt(0)
 {
     printf("image delay set as %.1fms\n",_imageMsgDelaySec*1000);
 }
 
-MsgSynchronizer::~MsgSynchronizer()
+MonoMsgSynchronizer::~MonoMsgSynchronizer()
 {
 
 }
 
 
-bool MsgSynchronizer::getRecentMsgs(sensor_msgs::ImageConstPtr &imgmsg, std::vector<sensor_msgs::ImuConstPtr> &vimumsgs)
+bool MonoMsgSynchronizer::getRecentMsgs(sensor_msgs::ImageConstPtr &imgmsg, std::vector<sensor_msgs::ImuConstPtr> &vimumsgs)
 {
     //unique_lock<mutex> lock2(_mutexIMUQueue);
     unique_lock<mutex> lock1(_mutexImageQueue);
@@ -132,7 +132,7 @@ bool MsgSynchronizer::getRecentMsgs(sensor_msgs::ImageConstPtr &imgmsg, std::vec
     return true;
 }
 
-void MsgSynchronizer::addImuMsg(const sensor_msgs::ImuConstPtr &imumsg)
+void MonoMsgSynchronizer::addImuMsg(const sensor_msgs::ImuConstPtr &imumsg)
 {
     unique_lock<mutex> lock(_mutexIMUQueue);
 
@@ -168,7 +168,7 @@ void MsgSynchronizer::addImuMsg(const sensor_msgs::ImuConstPtr &imumsg)
 
 }
 
-void MsgSynchronizer::addImageMsg(const sensor_msgs::ImageConstPtr &imgmsg)
+void MonoMsgSynchronizer::addImageMsg(const sensor_msgs::ImageConstPtr &imgmsg)
 {
     unique_lock<mutex> lock(_mutexImageQueue);
 
@@ -214,17 +214,17 @@ void MsgSynchronizer::addImageMsg(const sensor_msgs::ImageConstPtr &imgmsg)
 }
 
 
-void MsgSynchronizer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
+void MonoMsgSynchronizer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     addImageMsg(msg);
 }
 
-void MsgSynchronizer::imuCallback(const sensor_msgs::ImuConstPtr &msg)
+void MonoMsgSynchronizer::imuCallback(const sensor_msgs::ImuConstPtr &msg)
 {
     addImuMsg(msg);
 }
 
-void MsgSynchronizer::clearMsgs(void)
+void MonoMsgSynchronizer::clearMsgs(void)
 {
     _imuMsgQueue = std::queue<sensor_msgs::ImuConstPtr>();
     _imageMsgQueue = std::queue<sensor_msgs::ImageConstPtr>();

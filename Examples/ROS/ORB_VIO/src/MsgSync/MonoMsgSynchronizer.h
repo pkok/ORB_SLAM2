@@ -1,5 +1,4 @@
-#ifndef MSGSYNCHRONIZER_H
-#define MSGSYNCHRONIZER_H
+#pragma once
 
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
@@ -12,7 +11,7 @@ using namespace std;
 
 namespace ORBVIO
 {
-class MsgSynchronizer
+class MonoMsgSynchronizer
 {
 public:
     enum Status{
@@ -21,8 +20,8 @@ public:
         NORMAL
     };
 
-    MsgSynchronizer(const double& imagedelay = 0.);
-    ~MsgSynchronizer();
+    MonoMsgSynchronizer(const double& imagedelay = 0.);
+    ~MonoMsgSynchronizer();
 
     // add messages in callbacks
     void addImageMsg(const sensor_msgs::ImageConstPtr &imgmsg);
@@ -54,5 +53,3 @@ private:
 };
 
 }
-
-#endif // MSGSYNCHRONIZER_H

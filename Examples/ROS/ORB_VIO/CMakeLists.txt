@@ -64,24 +64,24 @@ ${PROJECT_SOURCE_DIR}/../../../lib/libORB_SLAM2.so
 # Node for monocular camera
 rosbuild_add_executable(Mono
 src/ros_vio_mono.cc
-src/MsgSync/MsgSynchronizer.cpp
+src/MsgSync/MonoMsgSynchronizer.cc
 )
 
 target_link_libraries(Mono
 ${LIBS}
 )
 
-## Node for monocular camera
-#rosbuild_add_executable(Stereo
-#src/ros_vio_stereo.cc
-#src/MsgSync/MsgSynchronizer.cpp
-#)
-#
-#target_link_libraries(Stereo
-#${LIBS}
-#)
+## Node for stereo camera
+rosbuild_add_executable(Stereo
+  src/ros_vio_stereo.cc
+  src/MsgSync/StereoMsgSynchronizer.cc
+)
 
-## Node for monocular camera
+target_link_libraries(Stereo
+  ${LIBS}
+)
+
+## Node for RGB-D camera
 #rosbuild_add_executable(RGBD
 #src/ros_vio_rgbd.cc
 #src/MsgSync/MsgSynchronizer.cpp
