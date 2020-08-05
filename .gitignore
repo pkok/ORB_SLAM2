@@ -10,6 +10,10 @@ Vocabulary/*.txt
 **/tmp/*
 **/debug.txt
 
+# CLion files
+.idea/
+cmake-build-*/
+
 Examples/ROS/ORB_SLAM2/Mono
 Examples/ROS/ORB_SLAM2/RGBD
 Examples/ROS/ORB_SLAM2/Stereo
@@ -26,3 +30,12 @@ Examples/ROS/ORB_VIO/RGBD
 Examples/ROS/ORB_VIO/Test
 
 tools/bin_vocabulary
+
+# Output files from Localmapping.cc
+gw.txt
+scale.txt
+biasa.txt
+condnum.txt
+computetime.txt
+biasg.txt
+Rwi.txt
