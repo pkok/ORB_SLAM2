@@ -187,7 +187,7 @@ void LocalMapping::VINSInitThread()
 
 bool LocalMapping::TryInitVIO(void)
 {
-    if(mpMap->KeyFramesInMap()<=mnLocalWindowSize)
+    if(mpMap->KeyFramesInMap()<=mnLocalWindowSize || mpMap->MapPointsInMap() <= 3)
         return false;
 
     static bool fopened = false;

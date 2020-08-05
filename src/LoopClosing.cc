@@ -590,6 +590,7 @@ void LoopClosing::CorrectLoop()
     Optimizer::OptimizeEssentialGraph(mpMap, mpMatchedKF, mpCurrentKF, NonCorrectedSim3, CorrectedSim3, LoopConnections, mbFixScale, this);
 
     // Map updated, set flag for Tracking
+    mpMap->InformNewBigChange();
     SetMapUpdateFlagInTracking(true);
 
     // Add loop edge
@@ -780,6 +781,8 @@ void LoopClosing::RunGlobalBundleAdjustment(unsigned long nLoopKF)
                     pMP->SetWorldPos(Rwc*Xc+twc);
                 }
             }
+
+            mpMap->InformNewBigChange();
 
             mpLocalMapper->Release();
 
