@@ -1,6 +1,7 @@
 *.user
 *~
 **/build/*
+**/build-*
 **/lib/*
 Vocabulary/*.txt
 *.kdev4
@@ -11,8 +12,8 @@ Vocabulary/*.txt
 **/debug.txt
 
 # CLion files
-.idea/
-cmake-build-*/
+**/.idea/
+**/cmake-build-*/
 
 Examples/ROS/ORB_SLAM2/Mono
 Examples/ROS/ORB_SLAM2/RGBD
