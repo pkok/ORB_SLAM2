@@ -18,6 +18,8 @@
 * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "Debug.h"
+
 #include "Tracking.h"
 
 #include<opencv2/core/core.hpp>
@@ -37,7 +39,7 @@
 #include<mutex>
 
 
-#define TRACK_WITH_IMU
+//#define TRACK_WITH_IMU
 
 using namespace std;
 
@@ -88,7 +90,7 @@ void Tracking::RecomputeIMUBiasAndCurrentNavstate(NavState& nscur)
     cv::Mat B = cv::Mat::zeros(3*(N-2),1,CV_32F);
     const cv::Mat& gw = mpLocalMapper->GetGravityVec();
     const cv::Mat& Tcb = ConfigParam::GetMatT_cb();
-    for(int i=0; i<N-2; i++)
+    for(unsigned int i=0; i<N-2; i++)
     {
         const Frame& F1 = mv20FramesReloc[i];
         const Frame& F2 = mv20FramesReloc[i+1];
@@ -930,6 +932,7 @@ void Tracking::Track()
 
         if(bOK)
         {
+            DL("");
             mState = OK;
 
             // Add Frames to re-compute IMU bias after reloc
@@ -966,6 +969,7 @@ void Tracking::Track()
         }
         else
         {
+            DL("");
             mState=LOST;
 
             // Clear Frame vectors for reloc bias computation
@@ -973,15 +977,18 @@ void Tracking::Track()
                 mv20FramesReloc.clear();
         }
 
+        DL("Update drawer");
         // Update drawer
         mpFrameDrawer->Update(this);
 
         // If tracking were good, check if we insert a keyframe
         if(bOK)
         {
+            DL("If tracking were good, check if we insert a keyframe");
             // Update motion model
             if(!mLastFrame.mTcw.empty())
             {
+                DL("");
                 cv::Mat LastTwc = cv::Mat::eye(4,4,CV_32F);
                 mLastFrame.GetRotationInverse().copyTo(LastTwc.rowRange(0,3).colRange(0,3));
                 mLastFrame.GetCameraCenter().copyTo(LastTwc.rowRange(0,3).col(3));
@@ -990,9 +997,11 @@ void Tracking::Track()
             else
                 mVelocity = cv::Mat();
 
+            DL("");
             mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.mTcw);
 
             // Clean VO matches
+            DL("Clean VO matches");
             for(int i=0; i<mCurrentFrame.N; i++)
             {
                 MapPoint* pMP = mCurrentFrame.mvpMapPoints[i];
@@ -1005,6 +1014,7 @@ void Tracking::Track()
             }
 
             // Delete temporal MapPoints
+            DL("Delete temporal MapPoints");
             for(list<MapPoint*>::iterator lit = mlpTemporalPoints.begin(), lend =  mlpTemporalPoints.end(); lit!=lend; lit++)
             {
                 MapPoint* pMP = *lit;
@@ -1014,16 +1024,32 @@ void Tracking::Track()
 
 
             // Check if we need to insert a new keyframe
+            DL("Check if we need to insert a new keyframe");
+            {
+                DL("NeedNewKeyFrame");
+                bool nnkf = NeedNewKeyFrame();
+                if (nnkf || mbCreateNewKFAfterReloc)
+                {
+                    DL("CreateNewKeyFrame");
+                    CreateNewKeyFrame();
+                }
+                DC(mbCreateNewKFAfterReloc);
+                if(mbCreateNewKFAfterReloc)
+                    mbCreateNewKFAfterReloc = false;
+            }
+            /*
             if(NeedNewKeyFrame() || mbCreateNewKFAfterReloc)
                 CreateNewKeyFrame();
             // Clear flag
             if(mbCreateNewKFAfterReloc)
                 mbCreateNewKFAfterReloc = false;
+            */
 
             // We allow points with high innovation (considererd outliers by the Huber Function)
             // pass to the new keyframe, so that bundle adjustment will finally decide
             // if they are outliers or not. We don't want next frame to estimate its position
             // with those points so we discard them in the frame.
+            DL("");
             for(int i=0; i<mCurrentFrame.N;i++)
             {
                 if(mCurrentFrame.mvpMapPoints[i] && mCurrentFrame.mvbOutlier[i])
@@ -1031,6 +1057,7 @@ void Tracking::Track()
             }
 
             // Clear First-Init flag
+            DL("Clear First-Init flag");
             if(mpLocalMapper->GetFirstVINSInited())
             {
                 mpLocalMapper->SetFirstVINSInited(false);
@@ -1040,6 +1067,7 @@ void Tracking::Track()
         // Reset if the camera get lost soon after initialization
         if(mState==LOST)
         {
+            DL("Reset if the camera get lost soon after initialization");
             //if(mpMap->KeyFramesInMap()<=5)
             if(!mpLocalMapper->GetVINSInited())
             {
@@ -1058,6 +1086,7 @@ void Tracking::Track()
     // Store frame pose information to retrieve the complete camera trajectory afterwards.
     if(!mCurrentFrame.mTcw.empty())
     {
+        DL("");
         cv::Mat Tcr = mCurrentFrame.mTcw*mCurrentFrame.mpReferenceKF->GetPoseInverse();
         mlRelativeFramePoses.push_back(Tcr);
         mlpReferences.push_back(mpReferenceKF);
@@ -1066,6 +1095,7 @@ void Tracking::Track()
     }
     else
     {
+        DL("");
         // This can happen if tracking is lost
         mlRelativeFramePoses.push_back(mlRelativeFramePoses.back());
         mlpReferences.push_back(mlpReferences.back());
@@ -1084,7 +1114,7 @@ void Tracking::StereoInitialization()
         mCurrentFrame.SetPose(cv::Mat::eye(4,4,CV_32F));
 
         // Create KeyFrame
-        KeyFrame* pKFini = new KeyFrame(mCurrentFrame,mpMap,mpKeyFrameDB);
+        KeyFrame* pKFini = new KeyFrame(mCurrentFrame,mpMap,mpKeyFrameDB,mvIMUSinceLastKF,NULL);
 
         // Insert KeyFrame in the map
         mpMap->AddKeyFrame(pKFini);
@@ -1270,6 +1300,7 @@ void Tracking::CreateInitialMapMonocular()
     // Bundle Adjustment
     cout << "New Map created with " << mpMap->MapPointsInMap() << " points" << endl;
 
+    D("Tracking's GBA");
     Optimizer::GlobalBundleAdjustemnt(mpMap,20);
 
     // Set median depth to 1
@@ -1359,6 +1390,7 @@ bool Tracking::TrackReferenceKeyFrame()
     mCurrentFrame.mvpMapPoints = vpMapPointMatches;
     mCurrentFrame.SetPose(mLastFrame.mTcw);
 
+    DC("entering PoseOptimization");
     Optimizer::PoseOptimization(&mCurrentFrame);
 
     // Discard outliers
@@ -1482,6 +1514,7 @@ bool Tracking::TrackWithMotionModel()
         return false;
 
     // Optimize frame pose with all matches
+    DC("entering PoseOptimization");
     Optimizer::PoseOptimization(&mCurrentFrame);
 
     // Discard outliers
@@ -1524,6 +1557,7 @@ bool Tracking::TrackLocalMap()
     SearchLocalPoints();
 
     // Optimize Pose
+    DC("entering PoseOptimization");
     Optimizer::PoseOptimization(&mCurrentFrame);
     mnMatchesInliers = 0;
 
@@ -1549,6 +1583,7 @@ bool Tracking::TrackLocalMap()
         }
     }
 
+    DC("Exiting LocalMap");
     // Decide if the tracking was succesful
     // More restrictive if there was a relocalization recently
     if(mCurrentFrame.mnId<mnLastRelocFrameId+mMaxFrames && mnMatchesInliers<50)
@@ -2073,6 +2108,7 @@ bool Tracking::Relocalization()
                         mCurrentFrame.mvpMapPoints[j]=NULL;
                 }
 
+                DC("entering PoseOptimization");
                 int nGood = Optimizer::PoseOptimization(&mCurrentFrame);
 
                 if(nGood<10)
@@ -2089,6 +2125,7 @@ bool Tracking::Relocalization()
 
                     if(nadditional+nGood>=50)
                     {
+                        DC("entering PoseOptimization");
                         nGood = Optimizer::PoseOptimization(&mCurrentFrame);
 
                         // If many inliers but still not enough, search by projection again in a narrower window
@@ -2104,6 +2141,7 @@ bool Tracking::Relocalization()
                             // Final optimization
                             if(nGood+nadditional>=50)
                             {
+                                DC("entering PoseOptimization");
                                 nGood = Optimizer::PoseOptimization(&mCurrentFrame);
 
                                 for(int io =0; io<mCurrentFrame.N; io++)

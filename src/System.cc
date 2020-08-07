@@ -19,6 +19,8 @@
 */
 
 
+#include "Debug.h"
+
 #include "System.h"
 #include "Converter.h"
 #include <thread>
@@ -152,6 +154,7 @@ cv::Mat System::TrackStereoVI(const cv::Mat &imLeft, const cv::Mat &imRight, con
 
   // Check mode change
   {
+    D("check mode change");
     unique_lock<mutex> lock(mMutexMode);
     if(mbActivateLocalizationMode)
     {
@@ -176,6 +179,7 @@ cv::Mat System::TrackStereoVI(const cv::Mat &imLeft, const cv::Mat &imRight, con
 
   // Check reset
   {
+    D("check reset");
     unique_lock<mutex> lock(mMutexReset);
     if(mbReset)
     {
@@ -184,6 +188,7 @@ cv::Mat System::TrackStereoVI(const cv::Mat &imLeft, const cv::Mat &imRight, con
     }
   }
 
+  D("moving control to mpTracker->GrabImageStereoVI");
   return mpTracker->GrabImageStereoVI(imLeft, imRight, vimu, timestamp);
 }
 

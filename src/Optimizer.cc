@@ -19,6 +19,7 @@
 */
 
 #include "Optimizer.h"
+#include "Debug.h"
 
 #include "Thirdparty/g2o/g2o/core/block_solver.h"
 #include "Thirdparty/g2o/g2o/core/optimization_algorithm_levenberg.h"
@@ -437,10 +438,9 @@ void Optimizer::LocalBAPRVIDP(KeyFrame *pCurKF, const std::list<KeyFrame*> &lLoc
             return;
 
     // First try
-    //optimizer.setVerbose(true);
-    optimizer.initializeOptimization();
-
-    optimizer.optimize(5);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(5));
 
 
     bool bDoMore= true;
@@ -471,8 +471,9 @@ void Optimizer::LocalBAPRVIDP(KeyFrame *pCurKF, const std::list<KeyFrame*> &lLoc
     }
 
     // Optimize again without the outliers
-    optimizer.initializeOptimization(0);
-    optimizer.optimize(10);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization(0))
+      DC(optimizer.optimize(10));
 
     }
 
@@ -833,8 +834,9 @@ void Optimizer::GlobalBundleAdjustmentNavStatePRV(Map* pMap, const cv::Mat& gw, 
     }
 
     // Optimize!
-    optimizer.initializeOptimization();
-    optimizer.optimize(nIterations);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(nIterations));
 
     // Recover optimized data
 
@@ -1235,10 +1237,9 @@ void Optimizer::LocalBundleAdjustmentNavStatePRV(KeyFrame *pCurKF, const std::li
             return;
 
     // First try
-    //optimizer.setVerbose(true);
-    optimizer.initializeOptimization();
-
-    optimizer.optimize(5);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(5));
 
     bool bDoMore= true;
 
@@ -1294,8 +1295,9 @@ void Optimizer::LocalBundleAdjustmentNavStatePRV(KeyFrame *pCurKF, const std::li
 //        cout<<endl;
 
     // Optimize again without the outliers
-    optimizer.initializeOptimization(0);
-    optimizer.optimize(10);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization(0))
+      DC(optimizer.optimize(10));
 
     }
 
@@ -1602,8 +1604,9 @@ void Optimizer::GlobalBundleAdjustmentNavState(Map* pMap, const cv::Mat& gw, int
     }
 
     // Optimize!
-    optimizer.initializeOptimization();
-    optimizer.optimize(nIterations);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(nIterations));
 
     // Recover optimized data
 
@@ -1923,9 +1926,9 @@ int Optimizer::PoseOptimization(Frame *pFrame, Frame* pLastFrame, const IMUPrein
         vNSFPVRlast->setEstimate(pLastFrame->GetNavState());
         vNSFBiaslast->setEstimate(pLastFrame->GetNavState());
 
-        //optimizer.setVerbose(true);
-        optimizer.initializeOptimization(0);
-        optimizer.optimize(its[it]);
+//        optimizer.setVerbose(true);
+        if (optimizer.initializeOptimization(0))
+          DC(optimizer.optimize(its[it]));
 
         nBad=0;
         for(size_t i=0, iend=vpEdgesMono.size(); i<iend; i++)
@@ -2227,8 +2230,9 @@ int Optimizer::PoseOptimization(Frame *pFrame, KeyFrame* pLastKF, const IMUPrein
         vNSFPVR->setEstimate(pFrame->GetNavState());
         vNSFBias->setEstimate(pFrame->GetNavState());
 
-        optimizer.initializeOptimization(0);
-        optimizer.optimize(its[it]);
+//        optimizer.setVerbose(true);
+        if (optimizer.initializeOptimization(0))
+          DC(optimizer.optimize(its[it]));
 
         nBad=0;
         for(size_t i=0, iend=vpEdgesMono.size(); i<iend; i++)
@@ -2612,9 +2616,9 @@ void Optimizer::LocalBundleAdjustmentNavState(KeyFrame *pCurKF, const std::list<
             return;
 
     // First try
-    //optimizer.setVerbose(true);
-    optimizer.initializeOptimization();
-    optimizer.optimize(5);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(5));
 
     bool bDoMore= true;
 
@@ -2664,8 +2668,9 @@ void Optimizer::LocalBundleAdjustmentNavState(KeyFrame *pCurKF, const std::list<
 //    }
 
     // Optimize again without the outliers
-    optimizer.initializeOptimization(0);
-    optimizer.optimize(10);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization(0))
+      DC(optimizer.optimize(10));
 
     }
 
@@ -2834,9 +2839,9 @@ Vector3d Optimizer::OptimizeInitialGyroBias(const std::vector<Frame> &vFrames)
     }
 
     // It's actualy a linear estimator, so 1 iteration is enough.
-    //optimizer.setVerbose(true);
-    optimizer.initializeOptimization();
-    optimizer.optimize(1);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(1));
 
     g2o::VertexGyrBias * vBgEst = static_cast<g2o::VertexGyrBias*>(optimizer.vertex(0));
 
@@ -2909,9 +2914,9 @@ Vector3d Optimizer::OptimizeInitialGyroBias(const std::vector<KeyFrame *> &vpKFs
     }
 
     // It's actualy a linear estimator, so 1 iteration is enough.
-    //optimizer.setVerbose(true);
-    optimizer.initializeOptimization();
-    optimizer.optimize(1);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(1));
 
     g2o::VertexGyrBias * vBgEst = static_cast<g2o::VertexGyrBias*>(optimizer.vertex(0));
 
@@ -2972,9 +2977,9 @@ Vector3d Optimizer::OptimizeInitialGyroBias(const vector<cv::Mat>& vTwc, const v
     }
 
     // It's actualy a linear estimator, so 1 iteration is enough.
-    //optimizer.setVerbose(true);
-    optimizer.initializeOptimization();
-    optimizer.optimize(1);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(1));
 
     g2o::VertexGyrBias * vBgEst = static_cast<g2o::VertexGyrBias*>(optimizer.vertex(0));
 
@@ -3199,8 +3204,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, const std::list<KeyFrame*> 
         if(*pbStopFlag)
             return;
 
-    optimizer.initializeOptimization();
-    optimizer.optimize(5);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(5));
 
     bool bDoMore= true;
 
@@ -3245,8 +3251,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, const std::list<KeyFrame*> 
     }
 
     // Optimize again without the outliers
-    optimizer.initializeOptimization(0);
-    optimizer.optimize(10);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization(0))
+      DC(optimizer.optimize(10));
 
     }
 
@@ -3333,7 +3340,10 @@ void Optimizer::GlobalBundleAdjustemnt(Map* pMap, int nIterations, bool* pbStopF
 {
     vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
     vector<MapPoint*> vpMP = pMap->GetAllMapPoints();
-    BundleAdjustment(vpKFs,vpMP,nIterations,pbStopFlag, nLoopKF, bRobust);
+    D("  #keyframes: " << vpKFs.size());
+    D("  #mappoints: " << vpMP.size());
+    if (!vpMP.empty()) 
+      BundleAdjustment(vpKFs,vpMP,nIterations,pbStopFlag, nLoopKF, bRobust);
 }
 
 
@@ -3475,8 +3485,9 @@ void Optimizer::BundleAdjustment(const vector<KeyFrame *> &vpKFs, const vector<M
     }
 
     // Optimize!
-    optimizer.initializeOptimization();
-    optimizer.optimize(nIterations);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(nIterations));
 
     // Recover optimized data
 
@@ -3668,8 +3679,10 @@ int Optimizer::PoseOptimization(Frame *pFrame)
     {
 
         vSE3->setEstimate(Converter::toSE3Quat(pFrame->mTcw));
-        optimizer.initializeOptimization(0);
-        optimizer.optimize(its[it]);
+//        optimizer.setVerbose(true);
+        if (optimizer.initializeOptimization(0))
+          DC(optimizer.optimize(its[it]));
+        D("post-optimizer");
 
         nBad=0;
         for(size_t i=0, iend=vpEdgesMono.size(); i<iend; i++)
@@ -3755,6 +3768,7 @@ int Optimizer::PoseOptimization(Frame *pFrame)
 //    Eigen::Map<VectorXd> bvec(solver_ptr->b(), solver_ptr->vectorSize());
 //    cout<<"b: "<<bvec.transpose()<<endl;
 
+    D("pose optimized");
     return nInitialCorrespondences-nBad;
 }
 
@@ -3964,8 +3978,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
         if(*pbStopFlag)
             return;
 
-    optimizer.initializeOptimization();
-    optimizer.optimize(5);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(5));
 
     bool bDoMore= true;
 
@@ -4011,8 +4026,9 @@ void Optimizer::LocalBundleAdjustment(KeyFrame *pKF, bool* pbStopFlag, Map* pMap
 
     // Optimize again without the outliers
 
-    optimizer.initializeOptimization(0);
-    optimizer.optimize(10);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization(0))
+      DC(optimizer.optimize(10));
 
     }
 
@@ -4297,8 +4313,9 @@ void Optimizer::OptimizeEssentialGraph(Map* pMap, KeyFrame* pLoopKF, KeyFrame* p
     }
 
     // Optimize!
-    optimizer.initializeOptimization();
-    optimizer.optimize(20);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(20));
 
     unique_lock<mutex> lock(pMap->mMutexMapUpdate);
 
@@ -4502,8 +4519,9 @@ int Optimizer::OptimizeSim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
     }
 
     // Optimize!
-    optimizer.initializeOptimization();
-    optimizer.optimize(5);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(5));
 
     // Check inliers
     int nBad=0;
@@ -4537,8 +4555,9 @@ int Optimizer::OptimizeSim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint *> &
 
     // Optimize again only with inliers
 
-    optimizer.initializeOptimization();
-    optimizer.optimize(nMoreIterations);
+//    optimizer.setVerbose(true);
+    if (optimizer.initializeOptimization())
+      DC(optimizer.optimize(nMoreIterations));
 
     int nIn = 0;
     for(size_t i=0; i<vpEdges12.size();i++)
