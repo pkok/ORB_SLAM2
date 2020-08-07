@@ -18,6 +18,7 @@
 * along with ORB-SLAM2. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "Debug.h"
 
 #include<iostream>
 #include<algorithm>
@@ -29,10 +30,22 @@
 
 #include<System.h>
 
+#include "euroc_imu_v102.h"
+
 using namespace std;
 
 void LoadImages(const string &strPathLeft, const string &strPathRight, const string &strPathTimes,
                 vector<string> &vstrImageLeft, vector<string> &vstrImageRight, vector<double> &vTimeStamps);
+
+std::vector<ORB_SLAM2::IMUData> get_imu_subseq(double timestamp, std::deque<ORB_SLAM2::IMUData>& data)
+{
+  std::vector<ORB_SLAM2::IMUData> subsequence;
+  while (data.front()._t < timestamp) {
+    subsequence.push_back(data.front());
+    data.pop_front();
+  }
+  return subsequence;
+}
 
 int main(int argc, char **argv)
 {
@@ -42,11 +55,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    // Retrieve all IMU data
+    deque<ORB_SLAM2::IMUData> imu_data = get_imu_data();
+    std::cout << "len(imu_data): " << imu_data.size() << std::endl;
+
     // Retrieve paths to images
     vector<string> vstrImageLeft;
     vector<string> vstrImageRight;
     vector<double> vTimeStamp;
     LoadImages(string(argv[3]), string(argv[4]), string(argv[5]), vstrImageLeft, vstrImageRight, vTimeStamp);
+    double t0 = vTimeStamp[0];
 
     if(vstrImageLeft.empty() || vstrImageRight.empty())
     {
@@ -116,6 +134,7 @@ int main(int argc, char **argv)
     for(int ni=0; ni<nImages; ni++)
     {
         // Read left and right images from file
+        D("Read left and right images from file");
         imLeft = cv::imread(vstrImageLeft[ni],CV_LOAD_IMAGE_UNCHANGED);
         imRight = cv::imread(vstrImageRight[ni],CV_LOAD_IMAGE_UNCHANGED);
 
@@ -133,9 +152,11 @@ int main(int argc, char **argv)
             return 1;
         }
 
+        D("Remapping images");
         cv::remap(imLeft,imLeftRect,M1l,M2l,cv::INTER_LINEAR);
         cv::remap(imRight,imRightRect,M1r,M2r,cv::INTER_LINEAR);
 
+        D("Getting a timestamp?");
         double tframe = vTimeStamp[ni];
 
 
@@ -146,7 +167,10 @@ int main(int argc, char **argv)
 #endif
 
         // Pass the images to the SLAM system
+        D("Entering TrackStereoVI - frame " << ni << " at t=" << (tframe - t0));
         SLAM.TrackStereo(imLeftRect,imRightRect,tframe);
+        //SLAM.TrackStereoVI(imLeftRect,imRightRect,get_imu_subseq(tframe, imu_data),tframe);
+        D("Exiting TrackStereoVI");
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -159,6 +183,7 @@ int main(int argc, char **argv)
         vTimesTrack[ni]=ttrack;
 
         // Wait to load the next frame
+        D("Wait to load the next frame");
         double T=0;
         if(ni<nImages-1)
             T = vTimeStamp[ni+1]-tframe;
@@ -167,12 +192,15 @@ int main(int argc, char **argv)
 
         if(ttrack<T)
             usleep((T-ttrack)*1e6);
+        D("Next loop pls!");
     }
 
     // Stop all threads
+    D("Stop all threads");
     SLAM.Shutdown();
 
     // Tracking time statistics
+    D("Tracking time statistics");
     sort(vTimesTrack.begin(),vTimesTrack.end());
     float totaltime = 0;
     for(int ni=0; ni<nImages; ni++)
