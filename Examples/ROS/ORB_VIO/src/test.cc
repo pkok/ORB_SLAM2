@@ -96,7 +96,10 @@ class SynchroBuffer {
         std::bind(&SynchroBuffer::store_imu, this, _1));
     sync.registerCallback(
         std::bind(&SynchroBuffer::store_synchronized_data, this, _1, _2, _3));
+    std::cout << "  Setup of SynchroBuffer was succesful" << std::endl;
   }
+
+  bool is_cleared;
 
   // Callback for storing IMU messages in a buffer.
   // These are not collected in synchronization with the image messages.
@@ -104,6 +107,8 @@ class SynchroBuffer {
   void store_imu(const sensor_msgs::ImuConstPtr& msg) {
     {
       std::unique_lock<std::mutex> lock(buffer_mutex);
+      std::cout << "  Entering store_imu..." << std::endl;
+      if (is_cleared) std::cout << "    imu_buffer was cleared!" << std::endl;
       switch (status) {
         case Status::WAITING:
           imu_time_start = msg->header.stamp;
@@ -115,7 +120,10 @@ class SynchroBuffer {
           imu_buffer.emplace_back(imu_msg2data(msg));
           break;
       }
+      is_cleared = false;
     }
+    std::cout << "  Exiting store_imu, continuing with process_data"
+              << std::endl;
     process_data();
   }
 
@@ -125,6 +133,7 @@ class SynchroBuffer {
                                const sensor_msgs::ImageConstPtr& msg2,
                                const sensor_msgs::ImuConstPtr& msg3) {
     {
+      std::cout << "  Entering store_synchronized_data..." << std::endl;
       std::unique_lock<std::mutex> lock(synchronize_mutex);
       switch (status) {
         case Status::WAITING:
@@ -139,6 +148,9 @@ class SynchroBuffer {
           break;
       }
     }
+    std::cout
+        << "  Exiting store_synchronized_data, continuing with process_data"
+        << std::endl;
     process_data();
   }
 
@@ -149,6 +161,7 @@ class SynchroBuffer {
     // that came in through synchronization.  We can't just add
     // the one through synchronization, as we might still have to store
     // some non-synchronized IMU messages.
+    std::cout << "  Entering process_data" << std::endl;
     std::vector<ORB_SLAM2::IMUData> copied_buffer;
     cv::Mat copied_image1;
     cv::Mat copied_image2;
@@ -159,7 +172,10 @@ class SynchroBuffer {
       auto pos = std::find_if(std::begin(imu_buffer), std::end(imu_buffer),
                               std::bind(&SynchroBuffer::imu_msg_equal, this,
                                         std::placeholders::_1));
-      if (pos == std::end(imu_buffer)) return false;
+      if (pos == std::end(imu_buffer)) {
+        std::cout << "    Done; nothing to do" << std::endl;
+        return false;
+      }
       try {
         cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(image1);
         cv::remap(cv_ptr->image, copied_image1, map_1x, map_1y,
@@ -175,14 +191,18 @@ class SynchroBuffer {
       // Clean up the used data.  First delete the buffer of IMU messages,
       // and *then* reset the smart pointers.  Otherwise, you can't find
       // the used synced_imu in the buffer.
-      while (!imu_msg_equal(imu_buffer.front())) imu_buffer.pop_front();
+      while (!imu_buffer.empty() && !imu_msg_equal(imu_buffer.front()))
+        imu_buffer.pop_front();
+      if (imu_msg_equal(imu_buffer.front())) imu_buffer.pop_front();
       image1.reset();
       image2.reset();
+      is_cleared = true;
     }
 
     // process
     data_processor(copied_image1, copied_image2, copied_buffer, timestamp);
 
+    std::cout << "    Done; succesfully exiting" << std::endl;
     return true;
   }
 
@@ -243,13 +263,28 @@ int test_msgfilter(int argc, char** argv) {
   ros::NodeHandle nh;
   ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::STEREO, true);
   ORB_SLAM2::ConfigParam config(argv[2]);
+  std::cout << "  1" << std::endl;
   SynchroBuffer sb(nh, config,
                    std::bind(&ORB_SLAM2::System::TrackStereoVI, &SLAM,
                              std::placeholders::_1, std::placeholders::_2,
                              std::placeholders::_3, std::placeholders::_4));
+  std::cout << "  end" << std::endl;
   ros::spin();
   ros::shutdown();
   return EXIT_SUCCESS;
 }
 
-int main(int argc, char** argv) { return test_msgfilter(argc, argv); }
+
+int timestamp_collector(int argc, char** argv) {
+  ros::init(argc, argv, "Test");
+  std::ofstream oss(argv[2]);
+  ros::NodeHandle nh;
+  message_filters::Subscriber<sensor_msgs::Image> sub(nh, argv[1], 2);
+  sub.registerCallback([&](const sensor_msgs::ImageConstPtr& m) { oss << m->header.stamp << "\n"; });
+  ros::spin();
+  ros::shutdown();
+  return EXIT_SUCCESS;
+}
+
+//int main(int argc, char** argv) { return test_msgfilter(argc, argv); }
+int main(int argc, char** argv) { return timestamp_collector(argc, argv); }
