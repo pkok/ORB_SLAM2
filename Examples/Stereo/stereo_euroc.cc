@@ -30,7 +30,7 @@
 
 #include<System.h>
 
-#include "euroc_imu_v102.h"
+#include "IMU/parsers.h"
 
 using namespace std;
 
@@ -49,14 +49,14 @@ std::vector<ORB_SLAM2::IMUData> get_imu_subseq(double timestamp, std::deque<ORB_
 
 int main(int argc, char **argv)
 {
-    if(argc != 6)
+    if(argc != 7)
     {
-        cerr << endl << "Usage: ./stereo_euroc path_to_vocabulary path_to_settings path_to_left_folder path_to_right_folder path_to_times_file" << endl;
+        cerr << endl << "Usage: ./stereo_euroc path_to_vocabulary path_to_settings path_to_left_folder path_to_right_folder path_to_times_file path_to_imu_data" << endl;
         return 1;
     }
 
     // Retrieve all IMU data
-    deque<ORB_SLAM2::IMUData> imu_data = get_imu_data();
+    deque<ORB_SLAM2::IMUData> imu_data = ORB_SLAM2::IMU::parse_euroc(string(argv[6]));
     std::cout << "len(imu_data): " << imu_data.size() << std::endl;
 
     // Retrieve paths to images

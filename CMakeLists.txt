@@ -82,6 +82,8 @@ src/IMU/IMUPreintegrator.cpp
 src/IMU/so3.cpp
 src/IMU/NavState.cpp
 src/IMU/g2otypes.cpp
+
+src/IMU/parsers.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -110,13 +112,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
 #Examples/Stereo/stereo_kitti.cc)
 #target_link_libraries(stereo_kitti ${PROJECT_NAME})
 
-add_library(euroc_imu_v102
-Examples/Stereo/euroc_imu_v102.cc
-)
-
 add_executable(stereo_euroc
 Examples/Stereo/stereo_euroc.cc)
-target_link_libraries(stereo_euroc ${PROJECT_NAME} euroc_imu_v102)
+target_link_libraries(stereo_euroc ${PROJECT_NAME})
 
 
 #set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
